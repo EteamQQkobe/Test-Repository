@@ -4,14 +4,17 @@ import { Pressable, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { drawLanguage, type Language } from '@/lib/language-gacha';
+import { drawLanguage, pickLang, type Language } from '@/lib/language-gacha';
 
 type GachaPhase = 'idle' | 'playing';
+
+const BTN_COLOR = '#3c87f7';
 
 export function LanguageGacha() {
   const [phase, setPhase] = useState<GachaPhase>('idle');
   const [result, setResult] = useState<Language | null>(null);
   const [drawCount, setDrawCount] = useState(0);
+  const is_ready = true;
 
   const startGacha = useCallback(() => {
     setPhase('playing');
@@ -19,10 +22,17 @@ export function LanguageGacha() {
     setDrawCount(0);
   }, []);
 
-  const spin = useCallback(() => {
-    setResult(drawLanguage());
+  const handle_spin = useCallback(() => {
+    // pickLang も使えるがとりあえず drawLanguage を使う
+    const picked = drawLanguage();
+    console.log('picked:', picked);
+    setResult(picked);
     setDrawCount((count) => count + 1);
   }, []);
+
+  const goBack = () => {
+    setPhase('idle');
+  };
 
   if (phase === 'idle') {
     return (
@@ -46,6 +56,8 @@ export function LanguageGacha() {
     );
   }
 
+  const show_result = result != null && is_ready;
+
   return (
     <ThemedView style={styles.playing}>
       <ThemedText type="subtitle" style={styles.title}>
@@ -53,7 +65,7 @@ export function LanguageGacha() {
       </ThemedText>
 
       <ThemedView type="backgroundElement" style={styles.resultPanel}>
-        {result ? (
+        {show_result ? (
           <>
             <ThemedText type="small" themeColor="textSecondary">
               今回の言語
@@ -75,7 +87,7 @@ export function LanguageGacha() {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="ガチャを回す"
-        onPress={spin}
+        onPress={handle_spin}
         style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}>
         <ThemedText type="smallBold" style={styles.primaryButtonLabel}>
           ガチャを回す
@@ -85,7 +97,7 @@ export function LanguageGacha() {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="最初に戻る"
-        onPress={() => setPhase('idle')}
+        onPress={goBack}
         style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
         <ThemedText type="small" themeColor="textSecondary">
           最初に戻る
@@ -117,7 +129,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   primaryButton: {
-    backgroundColor: '#3c87f7',
+    backgroundColor: BTN_COLOR,
     paddingHorizontal: Spacing.five,
     paddingVertical: Spacing.three,
     borderRadius: Spacing.three,
